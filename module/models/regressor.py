@@ -87,19 +87,21 @@ class RCNNRegressor(nn.Module):
             keep: 保留的边界框索引
         """
         # 转换为Tensor
-        bboxes = torch.tensor(bboxes)
-        scores = torch.tensor(scores)
+        bboxes = bboxes.clone().detach() if isinstance(bboxes, torch.Tensor) else torch.tensor(bboxes)
+        scores = scores.clone().detach() if isinstance(scores, torch.Tensor) else torch.tensor(scores)
 
+        if scores.dim() > 1:
+            scores = scores.squeeze(1)  # 处理多类别分数
         # 计算边界框面积
         areas = (bboxes[:, 2] - bboxes[:, 0] + 1) * (bboxes[:, 3] - bboxes[:, 1] + 1)
 
         # 按置信度降序排序
         _, order = scores.sort(0, descending=True)
-
+        #print(order)
         keep = []  # 保留的边界框索引
-        while order.numel() > 0:  # 直到没有边界框
-            i = order[0]  # 置信度最高的边界框
-            keep.append(i.item())  # 保留
+        while order.numel() > 0:
+            i = order[0].item() if order.dim() > 0 else order.item()
+            keep.append(i)
 
             if order.numel() == 1:  # 只剩下一个边界框
                 break
@@ -161,16 +163,63 @@ class RCNNRegressor(nn.Module):
         """
         输入：
             x: 特征张量 [batch_size, input_dim]
-            rois: 区域提议列表 [N, 4] (x1, y1, x2, y2)
+            rois: 区域提议列表 [N, 5] (batch_index, x1, y1, x2, y2)
         输出：
             deltas: 边界框偏移量 [N, 4]
         """
         deltas = self.regressor(x)  # 边界框偏移量
-        return deltas[rois]  # 返回对应的偏移量
+        return deltas[rois[:, 0].long()]  # 转换为long类型索引
     
 
 
+
+
 if __name__ == "__main__":
-    # 测试示例
-    model = RCNNRegressor(input_dim=25088)  # 输入维度为VGG16特征提取后的维度
-    dummy_input = torch.randn(32, 25088)  # 批次大小32
+    # 完整测试示例
+    model = RCNNRegressor(input_dim=25088)
+    
+    # 模拟输入数据
+    batch_size = 2
+    num_rois_per_image = 5  # 每张图像的ROI数量
+    img_size = (600, 800)  # (H, W)
+    
+    # 生成测试数据（修正维度）
+    features = torch.randn(batch_size, 25088)  # 特征张量
+    rois = torch.stack([
+        torch.randint(0, 400, (batch_size * num_rois_per_image,)),  # x1
+        torch.randint(0, 300, (batch_size * num_rois_per_image,)),  # y1
+        torch.randint(400, 800, (batch_size * num_rois_per_image,)),# x2
+        torch.randint(300, 600, (batch_size * num_rois_per_image,)) # y2
+    ], dim=1).float()
+    
+    # 添加batch索引到ROIs
+    batch_indices = torch.repeat_interleave(torch.arange(batch_size), num_rois_per_image)
+    rois = torch.cat([batch_indices.unsqueeze(1).float(), rois], dim=1)  # [batch_size*num_rois_per_image, 5]
+    
+    # 使用forward_rois获取正确的deltas
+    deltas = model.forward_rois(features, rois)
+    print("回归器输出形状:", deltas.shape)  # 应输出 [10, 4]
+    
+    # 边界框生成测试 (修正参数)
+    pred_boxes = model.get_bbox(rois[:, 1:], deltas)  # 使用ROIs的坐标部分
+    print("\n预测框示例:")
+    print(pred_boxes[:3])
+    
+    # 后处理测试 (修正参数)
+    class_scores = torch.sigmoid(torch.randn(len(rois), 20))  # 分数数量与ROIs数量一致
+    max_scores, max_indices = torch.max(class_scores, dim=1)  # 获取每个ROI的最大得分和类别索引
+    print("\n最大得分示例:")
+    print(max_scores[:3])
+    print("\n类别索引示例:")
+    print(max_indices[:3])
+    final_boxes = model.post_process(
+    rois=rois[:, 1:],
+    scores=max_scores,  # 使用最大得分
+    deltas=deltas,
+    img_size=img_size,
+    threshold=0.7,
+    nms_threshold=0.3
+    )
+    
+    print("\n后处理结果:")
+    print(f"保留边界框数量: {len(final_boxes)}")
