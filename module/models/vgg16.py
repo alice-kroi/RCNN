@@ -57,6 +57,7 @@ class VGG(nn.Module):
         )
 
     def forward(self, x):
+        print(x.shape)
         x = self.features(x)
         x = self.classifier(x)
         return x
@@ -98,5 +99,21 @@ __all__ = [
     'VGG', 'vgg16', 'vgg16_bn', 'vgg19', 'vgg19_bn'
 ]
 if __name__ == "__main__":
-    model = vgg16()
-    print(model)
+    # 测试VGG16前向传播
+    model = VGG(make_layers(cfg['D']), num_classes=1000)
+    
+    # 生成测试输入（batch_size=2, 3通道，224x224）
+    test_input = torch.randn(2, 3, 224, 224)
+    
+    # 前向传播
+    output = model(test_input)
+    
+    # 验证输出
+    print("\n测试结果：")
+    print(f"输入形状: {test_input.shape}")
+    print(f"输出形状: {output.shape}")
+    print(f"输出示例（前5个类别分数）:\n{output[0][:5]}")
+    
+    # 验证分类器输出
+    assert output.shape == (2, 1000), "输出形状不符合预期"
+    print("\n测试通过！")

@@ -172,7 +172,7 @@ class RCNNRegressor(nn.Module):
     
 
 
-
+__all__ = ['RCNNRegressor']
 
 if __name__ == "__main__":
     # 完整测试示例

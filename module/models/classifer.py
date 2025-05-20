@@ -42,6 +42,8 @@ class RCNNClassifier(nn.Module):
         """
         return self.fc(x)
 
+__all__ = ['RCNNClassifier']
+
 # 示例用法
 if __name__ == "__main__":
     # 输入维度与VGG16特征提取后的维度一致 (512*7*7=25088)
