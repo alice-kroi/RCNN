@@ -37,10 +37,10 @@ class RCNN(nn.Module):
     def forward(self, images, rois):
         # 特征提取
         base_features = self.backbone(images)  # 假设返回形状 [B, 512, H', W']
-        
+        print(base_features.shape)
         # ROI池化（处理坐标缩放）
         pooled_features = self.roi_pool(base_features, rois)
-        
+        print(pooled_features.shape)
         # 后续处理保持不变
         flattened = pooled_features.view(pooled_features.size(0), -1)
         cls_scores = self.classifier(flattened)
@@ -89,7 +89,7 @@ if __name__ == "__main__":
         rois.append(rois_per_image)
     
     rois = torch.cat(rois, dim=0)
-    
+    print(rois.shape)
     # 3. 前向传播
     cls_scores, bbox_deltas = model(images, rois)
     
