@@ -3,7 +3,35 @@ from torch.utils.data import Dataset
 from torchvision.datasets import CelebA
 from torchvision import transforms
 from PIL import Image
+import yaml
+import os
 
+def load_config(path):
+    """
+    从指定路径加载YAML配置文件
+    参数：
+        path: 配置文件路径（支持绝对路径或相对路径）
+    返回：
+        包含配置的字典对象
+    异常：
+        当文件不存在或格式错误时抛出异常
+    """
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+            
+            # 自动转换相对路径为绝对路径
+            config_dir = os.path.dirname(os.path.abspath(path))
+            for key in ['data_root', 'model_dir', 'log_dir']:
+                if key in config and not os.path.isabs(config[key]):
+                    config[key] = os.path.normpath(os.path.join(config_dir, config[key]))
+            
+            return config
+            
+    except FileNotFoundError:
+        raise ValueError(f"配置文件 {path} 不存在")
+    except yaml.YAMLError as e:
+        raise ValueError(f"配置文件解析失败: {str(e)}")
 class CelebaDetectionDataset(Dataset):
     def __init__(self, root_dir, split='train', transform=None, download=False):
         """
@@ -41,6 +69,8 @@ class CelebaDetectionDataset(Dataset):
             img = self.transform(img)
             
         return img, boxes
+
+__all__ = ['CelebaDetectionDataset', 'load_config']
 
 # Example usage
 if __name__ == "__main__":

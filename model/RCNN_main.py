@@ -37,17 +37,19 @@ class RCNN(nn.Module):
     def forward(self, images, rois):
         # 特征提取
         base_features = self.backbone(images)  # 假设返回形状 [B, 512, H', W']
-        print(base_features.shape)
+        print("特征提取层后：",base_features.shape)
         # ROI池化（处理坐标缩放）
         pooled_features = self.roi_pool(base_features, rois)
-        print(pooled_features.shape)
+        print("roi池化层后：",pooled_features.shape)
         # 后续处理保持不变
         flattened = pooled_features.view(pooled_features.size(0), -1)
         cls_scores = self.classifier(flattened)
         bbox_preds = self.bbox_regressor(flattened)
-        
+        print("分类器后：",cls_scores.shape)
+        print("回归器后：",bbox_preds.shape)
         return cls_scores, bbox_preds
 
+__all__=['RCNN']
 # 辅助函数：区域建议（需要安装selectivesearch）
 # 需要先安装：pip install selectivesearch
 def get_region_proposals(image):
