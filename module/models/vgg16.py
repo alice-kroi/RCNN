@@ -5,7 +5,7 @@ from torch.autograd import Variable
 import math
 
 class VGG(nn.Module):
-    def __init__(self, features, num_classes=1000):
+    def __init__(self, num_classes=1000):
         '''
             输入图片大小 W×W
             卷积核大小 F×F
@@ -15,8 +15,7 @@ class VGG(nn.Module):
             N = (W − F + 2P )/S+1
         '''
         super(VGG, self).__init__()
-        self.features = features
-        self.classifier = nn.Sequential(
+        self.features = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, padding=1),
             nn.ReLU(True),
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
@@ -46,6 +45,9 @@ class VGG(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2),
             # 14×14x512
             nn.Flatten(),
+            
+        )
+        self.classifier = nn.Sequential(
             nn.Linear(512*7*7, 4096),
             nn.ReLU(True),
             nn.Dropout(),
@@ -56,8 +58,14 @@ class VGG(nn.Module):
             nn.Softmax(dim=1)
         )
 
+
     def forward(self, x):
+
         print(x.shape)
+        x = self.features(x)
+        return x
+    
+    def forward_all(self, x):
         x = self.features(x)
         x = self.classifier(x)
         return x
@@ -100,8 +108,8 @@ __all__ = [
 ]
 if __name__ == "__main__":
     # 测试VGG16前向传播
-    model = VGG(make_layers(cfg['D']), num_classes=1000)
-    
+    model = VGG()
+    #model = VGG(features=)
     # 生成测试输入（batch_size=2, 3通道，224x224）
     test_input = torch.randn(2, 3, 224, 224)
     

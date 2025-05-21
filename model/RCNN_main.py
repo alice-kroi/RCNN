@@ -19,7 +19,7 @@ class RCNN(nn.Module):
     def __init__(self, num_classes=20):
         super(RCNN, self).__init__()
         # 特征提取网络（使用预训练的VGG16）
-        self.backbone = VGG(features=256)
+        self.backbone = VGG()
         self.fc_features = 512 * 7 * 7  # VGG16最后特征图尺寸
         
         # 分类器（对象类别 + 背景）
@@ -61,8 +61,8 @@ if __name__ == "__main__":
     
     # 模拟输入数据
     batch_size = 2
-    img_height = 256
-    img_width = 256
+    img_height = 224
+    img_width = 224
     
     # 1. 生成模拟图像 [batch, channel, height, width]
     images = torch.randn(batch_size, 3, img_height, img_width)
