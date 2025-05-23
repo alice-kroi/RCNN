@@ -21,7 +21,7 @@ optimizer:
 
 # 模型参数
 model:
-  num_classes: 2      # 分类类别数（含背景）
+  num_classes: 20      # 分类类别数（含背景）
   roi_output_size: 7  # ROI池化输出尺寸
   spatial_scale: 0.0625  # 1/16，对应VGG的降采样倍数
 
