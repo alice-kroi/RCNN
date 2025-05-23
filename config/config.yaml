@@ -1,0 +1,33 @@
+# 数据集配置
+dataset:
+  path: "E:/github/dataset"  # 数据集根目录路径
+  image_size: 224     # 输入图像尺寸
+  use_augmentation: true  # 是否启用数据增强
+
+# 训练参数
+training:
+  batch_size: 32
+  num_workers: 4
+  epochs: 100
+  device: "cpu"      # 或 "cpu"
+  save_interval: 10  # 每多少epoch保存一次模型
+
+# 优化器参数
+optimizer:
+  type: "sgd"
+  lr: 0.001
+  momentum: 0.9
+  weight_decay: 0.0005
+
+# 模型参数
+model:
+  num_classes: 2      # 分类类别数（含背景）
+  roi_output_size: 7  # ROI池化输出尺寸
+  spatial_scale: 0.0625  # 1/16，对应VGG的降采样倍数
+
+# 区域建议参数
+region_proposal:
+  min_size: 100       # 候选区域最小尺寸
+  scale: 500          # selective search参数
+  sigma: 0.9
+  min_size: 200

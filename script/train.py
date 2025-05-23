@@ -1,10 +1,10 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import torch
 import torch.nn as nn
 import torchvision.models as models
 from torchvision.ops import nms,RoIPool
-from module.models.vgg16 import VGG
-from module.models.classifer import RCNNClassifier
-from module.models.regressor import RCNNRegressor
 from tool.dataset_load import CelebaDetectionDataset,load_config
 from torch.utils.data import DataLoader
 from torch.optim import Adam,SGD
@@ -16,8 +16,9 @@ from model.RCNN_main import RCNN
 
 if __name__ == "__main__":
     # 加载配置
-    config = load_config("config.yaml")
-    
+    config = load_config("E:/github/RCNN/config/config.yaml")
+    print(config)
+    '''
     # 初始化数据集和数据加载器
     train_dataset = CelebaDetectionDataset(
         root_dir=config['dataset_path'],
@@ -31,7 +32,7 @@ if __name__ == "__main__":
     )
 
     # 初始化模型
-    model =RCNN
+    model =RCNN()
     
     # 定义损失函数和优化器
     criterion_cls = nn.CrossEntropyLoss()
@@ -64,4 +65,4 @@ if __name__ == "__main__":
             total_loss.backward()
             optimizer.step()
         
-        print(f"Epoch {epoch+1}, Loss: {total_loss.item()}")
+        print(f"Epoch {epoch+1}, Loss: {total_loss.item()}")'''

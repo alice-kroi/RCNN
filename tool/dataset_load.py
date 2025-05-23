@@ -8,25 +8,33 @@ import os
 
 def load_config(path):
     """
-    从指定路径加载YAML配置文件
+    从指定路径加载YAML配置文件（支持嵌套结构）
     参数：
-        path: 配置文件路径（支持绝对路径或相对路径）
+        path: 配置文件路径
     返回：
-        包含配置的字典对象
-    异常：
-        当文件不存在或格式错误时抛出异常
+        包含配置的嵌套字典对象
     """
     try:
         with open(path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
             
-            # 自动转换相对路径为绝对路径
             config_dir = os.path.dirname(os.path.abspath(path))
-            for key in ['data_root', 'model_dir', 'log_dir']:
-                if key in config and not os.path.isabs(config[key]):
-                    config[key] = os.path.normpath(os.path.join(config_dir, config[key]))
             
-            return config
+            def convert_paths(config_dict):
+                """递归转换所有包含路径的配置项"""
+                for key in list(config_dict.keys()):
+                    # 处理嵌套配置
+                    if isinstance(config_dict[key], dict):
+                        convert_paths(config_dict[key])
+                    # 自动转换路径类配置
+                    elif any(s in key.lower() for s in ['path', 'dir']) and isinstance(config_dict[key], str):
+                        if not os.path.isabs(config_dict[key]):
+                            config_dict[key] = os.path.normpath(
+                                os.path.join(config_dir, config_dict[key])
+                            )
+                return config_dict
+                
+            return convert_paths(config)
             
     except FileNotFoundError:
         raise ValueError(f"配置文件 {path} 不存在")
@@ -80,10 +88,10 @@ if __name__ == "__main__":
     ])
     
     dataset = CelebaDetectionDataset(
-        root_dir='E:/github/RCNN/dataset',
+        root_dir='E:/github/dataset',
         split='train',
         transform=transform,
-        download=False
+        download=True
     )
     
     dataloader = torch.utils.data.DataLoader(
