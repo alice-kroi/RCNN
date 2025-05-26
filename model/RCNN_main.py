@@ -42,7 +42,7 @@ class RCNN(nn.Module):
         # 特征提取
         base_features = self.backbone(images)  # 假设返回形状 [B, 512, H', W']
         print("特征提取层后：",base_features.shape)
-
+        # 生成区域建议（使用内置函数）
         batch_rois = []
         for batch_idx in range(images.size(0)):
             # 转换图像格式为numpy array
@@ -56,7 +56,6 @@ class RCNN(nn.Module):
         
         rois_tensor = torch.cat(batch_rois).to(images.device)
 
-
         # ROI池化（处理坐标缩放）
         pooled_features = self.roi_pool(base_features, rois_tensor)
         print("roi池化层后：",pooled_features.shape)
@@ -68,7 +67,7 @@ class RCNN(nn.Module):
         print("分类器后：",cls_scores.shape)
         print("回归器后：",bbox_preds.shape)
         return cls_scores, bbox_preds
-    # 新增辅助方法
+    # 辅助方法
     def _generate_proposals(self, image):
         """内部区域建议生成"""
         _, regions = selectivesearch.selective_search(
@@ -107,17 +106,21 @@ if __name__ == "__main__":
     images = (torch.rand(batch_size, 3, img_height, img_width) * 255).float()
     
     # 3. 前向传播（删除手动生成rois步骤）
-    cls_scores, bbox_deltas = model(images)
+    cls_scores, bbox_predict = model(images)
     
     # 4. 验证输出形状（更新验证逻辑）
     num_rois = cls_scores.shape[0]
     print("\n测试结果：")
     print(f"生成的ROI数量: {num_rois}")
     print(f"分类得分形状: {cls_scores.shape} (应为 [N, 21])")
-    print(f"边界框偏移形状: {bbox_deltas.shape} (应为 [N, 4])")
+    print(f"边界框偏移形状: {bbox_predict.shape} (应为 [N, 4])")
     
     # 5. 可选：显示部分结果（保持原样）
     print("\n前3个分类得分示例：")
     print(cls_scores[:3])
     print("\n前3个边界框偏移示例：")
-    print(bbox_deltas[:3])
+    print(bbox_predict[:3])
+
+    # 6. 保存模型（保持原样）
+    torch.save(model.state_dict(), 'rcnn_model.pth')
+    print("\n模型已保存为 rcnn_model.pth")

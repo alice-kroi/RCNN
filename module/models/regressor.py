@@ -19,7 +19,8 @@ class RCNNRegressor(nn.Module):
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
-            nn.Linear(hidden_dim, output_dim)  # 输出坐标偏移量 (dx, dy, dw, dh)
+            nn.Linear(hidden_dim, output_dim),  # 输出坐标偏移量 (dx, dy, dw, dh)
+            nn.Sigmoid()  # 应用Sigmoid激活函数
         )
         
         self._init_weights()

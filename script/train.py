@@ -58,6 +58,11 @@ if __name__ == "__main__":
         num_workers=num_workers  # 使用配置中的num_workers
     )
 
+    for images, targets in train_loader:
+        print(images.shape)  # 输出图像的形状
+        print(targets)  # 输出标注信息
+        break  # 只输出第一个批次的信息
+
     # 初始化模型
     model = RCNN(num_classes=num_classes)
     
@@ -78,18 +83,18 @@ if __name__ == "__main__":
     for epoch in range(100):
         for images, targets in train_loader:
             images = images.to(device)
-            targets = [t.to(device) for t in targets]
+            #targets = [t.to(device) for t in targets]
             
             # 前向传播
             cls_scores, bbox_preds = model(images)
             
             # 计算损失
             # 这里需要根据实际标注格式计算损失
-            # 以下为示例逻辑，需根据实际数据调整
-            loss_cls = criterion_cls(cls_scores, targets['labels'])
-            loss_reg = criterion_reg(bbox_preds, targets['boxes'])
-            total_loss = loss_cls + loss_reg
-            
+            #loss_cls = criterion_cls(cls_scores, targets['labels'])
+            print(bbox_preds,targets)
+            loss_reg = criterion_reg(bbox_preds, targets)
+            #total_loss = loss_cls + loss_reg
+            total_loss = loss_reg
             # 反向传播
             optimizer.zero_grad()
             total_loss.backward()
@@ -98,3 +103,4 @@ if __name__ == "__main__":
         if (epoch+1) % save_interval == 0:
             torch.save(model.state_dict(), f"rcnn_epoch_{epoch+1}.pth")
         print(f"Epoch {epoch+1}, Loss: {total_loss.item()}")
+
