@@ -16,7 +16,7 @@ from module.models.vgg16 import VGG
 
 
 class RCNN(nn.Module):
-    def __init__(self, num_classes=20):
+    def __init__(self, num_classes=20,max_proposals=200):
         super(RCNN, self).__init__()
         # 特征提取网络（使用预训练的VGG16）
         self.backbone = VGG()
@@ -34,10 +34,11 @@ class RCNN(nn.Module):
             spatial_scale=1.0/16  # 根据VGG的降采样倍数设置
         )
         self.proposal_params = {
-            'scale': 500,
+            'scale': max_proposals,
             'sigma': 0.9,
             'min_size': 200
         }
+        self.max_proposals = max_proposals  # 新增最大建议数参数
     def forward(self, images):
         # 特征提取
         base_features = self.backbone(images)  # 假设返回形状 [B, 512, H', W']
@@ -46,12 +47,12 @@ class RCNN(nn.Module):
 
         batch_rois = []
         for batch_idx in range(images.size(0)):
-            # 转换图像格式为numpy array
             img_np = images[batch_idx].permute(1, 2, 0).cpu().numpy()
             img_np = (img_np * 255).astype(np.uint8)
             
-            # 生成建议区域（调用内置函数）
             regions = self._generate_proposals(img_np)
+            # 截取前N个建议区域
+            regions = regions[:self.max_proposals]  # 新增截断逻辑
             rois = self._format_rois(regions, batch_idx)
             batch_rois.append(rois)
         
@@ -81,11 +82,17 @@ class RCNN(nn.Module):
         return [region['rect'] for region in regions if region['size'] > 200]
 
     def _format_rois(self, regions, batch_idx):
-        """将区域建议转换为张量格式"""
+        """调整格式为[N, 4]"""
         rois = []
-        for x, y, w, h in regions:
-            rois.append([batch_idx, x, y, x+w, y+h])
-        return torch.tensor(rois, dtype=torch.float32)
+        for x, y, w, h in regions[:self.max_proposals]:  # 确保不超过最大提议数
+            rois.append([x, y, x+w, y+h])
+        
+        # 填充零保持维度一致
+        if len(rois) < self.max_proposals:
+            padding = [[0,0,0,0]] * (self.max_proposals - len(rois))
+            rois += padding
+        
+        return torch.tensor([[batch_idx] + coord for coord in rois], dtype=torch.float32)
 __all__=['RCNN']
 # 辅助函数：区域建议（需要安装selectivesearch）
 # 需要先安装：pip install selectivesearch
