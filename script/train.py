@@ -98,6 +98,7 @@ if __name__ == "__main__":
             #total_loss = loss_cls + loss_reg
             total_loss = loss_reg
             # 反向传播
+            print('loss:',total_loss)
             optimizer.zero_grad()
             total_loss.backward()
             optimizer.step()

@@ -74,7 +74,7 @@ class CelebaDetectionDataset(Dataset):
         y1 = y / img_height
         x2 = (x + w) / img_width
         y2 = (y + h) / img_height
-        boxes = torch.tensor([x1, y1, x2, y2], dtype=torch.float32)
+        boxes = torch.tensor([[x1, y1, x2, y2]], dtype=torch.float32)
         
         # Apply transforms
         if self.transform:
