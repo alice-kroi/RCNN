@@ -43,6 +43,7 @@ class RCNN(nn.Module):
         base_features = self.backbone(images)  # 假设返回形状 [B, 512, H', W']
         print("特征提取层后：",base_features.shape)
         # 生成区域建议（使用内置函数）
+
         batch_rois = []
         for batch_idx in range(images.size(0)):
             # 转换图像格式为numpy array
@@ -62,6 +63,7 @@ class RCNN(nn.Module):
         # 后续处理保持不变
         flattened = pooled_features.view(pooled_features.size(0), -1)
         print("展平后：",flattened.shape)
+
         cls_scores = self.classifier(flattened)
         bbox_preds = self.bbox_regressor(flattened)
         print("分类器后：",cls_scores.shape)

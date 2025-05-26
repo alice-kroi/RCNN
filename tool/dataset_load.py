@@ -67,10 +67,14 @@ class CelebaDetectionDataset(Dataset):
     def __getitem__(self, idx):
         # Get image and bbox from official dataset
         img, bbox = self.celeba[idx]
-        
+        img_width, img_height = img.size
         # Convert bbox to [xmin, ymin, xmax, ymax] format
         x, y, w, h = bbox.numpy()
-        boxes = torch.tensor([[x, y, x + w, y + h]], dtype=torch.float32)
+        x1 = x / img_width
+        y1 = y / img_height
+        x2 = (x + w) / img_width
+        y2 = (y + h) / img_height
+        boxes = torch.tensor([x1, y1, x2, y2], dtype=torch.float32)
         
         # Apply transforms
         if self.transform:

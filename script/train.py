@@ -91,7 +91,9 @@ if __name__ == "__main__":
             # 计算损失
             # 这里需要根据实际标注格式计算损失
             #loss_cls = criterion_cls(cls_scores, targets['labels'])
-            print(bbox_preds,targets)
+            print('原始标签形状',targets.shape)
+            print('原始预测形状',bbox_preds.shape)
+
             loss_reg = criterion_reg(bbox_preds, targets)
             #total_loss = loss_cls + loss_reg
             total_loss = loss_reg

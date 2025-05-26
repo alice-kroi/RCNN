@@ -44,7 +44,6 @@ class VGG(nn.Module):
             nn.ReLU(True),
             nn.MaxPool2d(kernel_size=2, stride=2),
             # 14×14x512
-            
         )
         self.classifier = nn.Sequential(
             nn.Flatten(),
@@ -61,7 +60,7 @@ class VGG(nn.Module):
 
     def forward(self, x):
 
-        print(x.shape)
+        #print(x.shape)
         x = self.features(x)
         return x
     
